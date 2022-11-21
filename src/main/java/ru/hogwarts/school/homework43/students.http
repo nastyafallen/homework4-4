@@ -1,0 +1,45 @@
+GET http://localhost:8080/student/find?id=1
+
+###
+POST http://localhost:8080/student
+Content-Type: application/json
+
+{
+  "name": "Bellatrix Black",
+  "age": 42
+}
+
+###
+GET http://localhost:8080/student/1/faculty
+
+###
+DELETE http://localhost:8080/student/1
+
+###
+GET http://localhost:8080/student/count
+
+###
+GET http://localhost:8080/student/averageAge
+
+###
+GET http://localhost:8080/student/lastStudents?number=3
+
+###
+POST http://localhost:8080/faculty
+Content-Type: application/json
+
+{
+  "name": "Random Faculty",
+  "color": "black"
+}
+
+###
+POST http://localhost:8080/avatar/5
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="avatar"; filename="avatar.jpg"
+Content-Type: image/jpeg
+
+<./avatar.jpg
+--WebAppBoundary
