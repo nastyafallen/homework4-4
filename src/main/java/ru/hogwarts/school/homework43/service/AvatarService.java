@@ -2,63 +2,73 @@ package ru.hogwarts.school.homework43.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ru.hogwarts.school.homework43.exception.StudentNotFoundException;
 import ru.hogwarts.school.homework43.model.Avatar;
 import ru.hogwarts.school.homework43.model.Student;
 import ru.hogwarts.school.homework43.repository.AvatarRepository;
 
-import javax.transaction.Transactional;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
-
 @Service
-@Transactional
 public class AvatarService {
     private final AvatarRepository avatarRepository;
     private final StudentService studentService;
 
-    @Value("${path.to.avatars.folder}")
+    @Value("/avatars")
     private String avatarsDir;
 
     @Autowired
-    public AvatarService(AvatarRepository avatarRepository, StudentService studentService) {
+    public AvatarService(AvatarRepository avatarRepository,
+                         StudentService studentService) {
         this.avatarRepository = avatarRepository;
         this.studentService = studentService;
     }
 
-    public Avatar findAvatar(Long studentId) {
-        Optional<Avatar> optional = avatarRepository.findAvatarByStudentId(studentId);
-        return optional.orElse(null);
+    public Pair<byte[], String> findAvatarFromDb(Long studentId) {
+        Avatar avatar = avatarRepository.findAvatarByStudentId(studentId)
+                .orElseThrow(StudentNotFoundException::new);
+        return Pair.of(avatar.getData(), avatar.getMediaType());
+    }
+
+    public Pair<Resource, String> findAvatarFromFile(Long studentId) {
+        Avatar avatar = avatarRepository.findAvatarByStudentId(studentId)
+                .orElseThrow(StudentNotFoundException::new);
+        return Pair.of(new FileSystemResource(avatar.getFilePath()), avatar.getMediaType());
     }
 
     public void uploadAvatar(Long studentId, MultipartFile avatarFile) throws IOException {
         Student student = studentService.getStudent(studentId);
-        Path filePath = Path.of(avatarsDir, student + "." + getExtensions(avatarFile.getOriginalFilename()));
+        Path filePath = Paths.get(avatarsDir).resolve(
+                student.getName() + "." + getExtensions(avatarFile.getOriginalFilename()));
         Files.createDirectories(filePath.getParent());
         Files.deleteIfExists(filePath);
         try (
-                InputStream is = avatarFile.getInputStream();
-                OutputStream os = Files.newOutputStream(filePath, CREATE_NEW);
-                BufferedInputStream bis = new BufferedInputStream(is, 1024);
-                BufferedOutputStream bos = new BufferedOutputStream(os, 1024)
-        ) {
-            bis.transferTo(bos);
+                OutputStream outputStream = Files.newOutputStream(filePath);
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream((int) avatarFile.getSize())) {
+            avatarFile.getInputStream().transferTo(byteArrayOutputStream);
+            byte[] avatarBytes = byteArrayOutputStream.toByteArray();
+
+            outputStream.write(avatarBytes);
+
+            Avatar avatar = avatarRepository.findAvatarByStudentId(studentId).orElse(new Avatar());
+            avatar.setStudent(student);
+            avatar.setFilePath(filePath.toString());
+            avatar.setFileSize(avatarFile.getSize());
+            avatar.setMediaType(avatarFile.getContentType());
+            avatar.setData(avatarFile.getBytes());
+            avatarRepository.save(avatar);
         }
-        Avatar avatar = findAvatar(studentId);
-        avatar.setStudent(student);
-        avatar.setFilePath(filePath.toString());
-        avatar.setFileSize(avatarFile.getSize());
-        avatar.setMediaType(avatarFile.getContentType());
-        avatar.setData(avatarFile.getBytes());
-        avatarRepository.save(avatar);
     }
 
     private String getExtensions(String fileName) {

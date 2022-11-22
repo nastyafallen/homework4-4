@@ -1,5 +1,7 @@
 package ru.hogwarts.school.homework43.controller;
 
+import org.springframework.core.io.Resource;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,24 +41,24 @@ public class AvatarController {
     }
 
     @GetMapping(value = "/{id}/avatar-from-db")
-    public ResponseEntity<byte[]> downloadAvatar(@PathVariable Long id) {
-        Avatar avatar = avatarService.findAvatar(id);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(avatar.getMediaType()));
-        headers.setContentLength(avatar.getData().length);
-        return ResponseEntity.status(HttpStatus.OK).headers(headers).body(avatar.getData());
+    public ResponseEntity<byte[]> downloadAvatarFromDb(@PathVariable Long id) {
+        Pair<byte[], String> result = avatarService.findAvatarFromDb(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .contentType(MediaType.parseMediaType(result.getSecond()))
+                .contentLength(result.getFirst().length)
+                .body(result.getFirst());
     }
 
     @GetMapping(value = "/{id}/avatar-from-file")
-    public void downloadAvatar(@PathVariable Long id, HttpServletResponse response) throws IOException {
-        Avatar avatar = avatarService.findAvatar(id);
-        Path path = Path.of(avatar.getFilePath());
-        try(InputStream is = Files.newInputStream(path);
-            OutputStream os = response.getOutputStream()) {
-            response.setStatus(200);
-            response.setContentType(avatar.getMediaType());
-            response.setContentLength((int) avatar.getFileSize());
-            is.transferTo(os);
+    public ResponseEntity<Resource> downloadAvatarFromFile(@PathVariable Long id) {
+        try {
+            Pair<Resource, String> result = avatarService.findAvatarFromFile(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.parseMediaType(result.getSecond()))
+                    .contentLength(result.getFirst().contentLength())
+                    .body(result.getFirst());
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 
