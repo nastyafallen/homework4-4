@@ -1,5 +1,7 @@
 package ru.hogwarts.school.homework43.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.hogwarts.school.homework43.exception.FacultyNotFoundException;
@@ -13,6 +15,7 @@ import java.util.Set;
 
 @Service
 public class FacultyService {
+    Logger logger = LoggerFactory.getLogger(FacultyService.class);
     private final FacultyRepository facultyRepository;
 
     @Autowired

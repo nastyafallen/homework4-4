@@ -1,19 +1,19 @@
-GET http://localhost:8080/student/find?id=1
+GET http://localhost:8080/student/find?id=7
 
 ###
 POST http://localhost:8080/student
 Content-Type: application/json
 
 {
-  "name": "Bellatrix Black",
-  "age": 42
+  "name": "test",
+  "age": 99
 }
 
 ###
-GET http://localhost:8080/student/1/faculty
+GET http://localhost:8080/student/7/faculty
 
 ###
-DELETE http://localhost:8080/student/1
+DELETE http://localhost:8080/student/20
 
 ###
 GET http://localhost:8080/student/count
@@ -22,16 +22,19 @@ GET http://localhost:8080/student/count
 GET http://localhost:8080/student/averageAge
 
 ###
-GET http://localhost:8080/student/lastStudents?number=3
+GET http://localhost:8080/student/lastStudents?number=1
 
 ###
 POST http://localhost:8080/faculty
 Content-Type: application/json
 
 {
-  "name": "Random Faculty",
-  "color": "black"
+  "name": "test",
+  "color": "test"
 }
+
+###
+DELETE http://localhost:8080/faculty/7
 
 ###
 POST http://localhost:8080/avatar/9

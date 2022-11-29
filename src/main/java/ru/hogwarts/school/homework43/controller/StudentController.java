@@ -1,9 +1,11 @@
 package ru.hogwarts.school.homework43.controller;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.hogwarts.school.homework43.exception.StudentNotFoundException;
 import ru.hogwarts.school.homework43.model.Faculty;
 import ru.hogwarts.school.homework43.model.Student;
 import ru.hogwarts.school.homework43.service.StudentService;
@@ -78,5 +80,11 @@ public class StudentController {
     @GetMapping("/lastStudents")
     public ResponseEntity<List<Student>> getLastStudents(@RequestParam("number") @Min(1) @Max(10) int number) {
         return ResponseEntity.ok(studentService.getLastStudents(number));
+    }
+
+    @ExceptionHandler(EmptyResultDataAccessException.class)
+    public ResponseEntity<String> handleStudentNotExistsException(EmptyResultDataAccessException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Студент с таким id не найден!");
     }
 }

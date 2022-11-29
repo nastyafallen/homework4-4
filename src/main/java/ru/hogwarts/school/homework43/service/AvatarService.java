@@ -1,5 +1,7 @@
 package ru.hogwarts.school.homework43.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
@@ -13,6 +15,7 @@ import ru.hogwarts.school.homework43.model.Avatar;
 import ru.hogwarts.school.homework43.model.Student;
 import ru.hogwarts.school.homework43.repository.AvatarRepository;
 
+import javax.transaction.Transactional;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,10 +25,11 @@ import java.util.stream.Collectors;
 
 @Service
 public class AvatarService {
+    Logger logger = LoggerFactory.getLogger(AvatarService.class);
     private final AvatarRepository avatarRepository;
     private final StudentService studentService;
 
-    @Value("/avatars")
+    @Value("${path.to.avatars.folder}")
     private String avatarsDir;
 
     @Autowired
